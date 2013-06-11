@@ -1,0 +1,136 @@
+<?php
+
+function dpages_blocks(){
+  $page = array(
+    'type' => 'row',
+    'content' => array(
+      array(
+        'type' => 'block',
+        'delta' => 'system_main-menu',
+        'width' => 8,
+      ),
+      array(
+        'type' => 'block',
+        'delta' => 'node_recent',
+        'width' => 2,
+      ),
+      array(
+        'type' => 'html',
+        'content' => '<p>test</p>',
+        'width' => 2,
+      ),
+      array(
+        'type' => 'row',
+        'content' => array(
+          array(
+            'type' => 'active_content',
+            'width' => 12,
+          ),
+        ),
+      )
+    ),
+  );
+  return $page;
+}
+
+function regionless(){
+  return 'x';
+}
+
+function dregions(){
+  $page = dpages_blocks();
+  $page = array(
+    '#markup' => dpages_page_render($page),
+  );
+  return $page;
+}
+
+function dpages_page_render($element){
+  //$output = '';
+  $content = array();
+  $children = array();
+
+  if(isset($element['content']) && is_array($element['content'])){
+    $content = $element['content'];
+  }
+
+  foreach($content as $child){
+    $children[] = array(
+      '#markup' => dpage_render($child),
+    );
+  }
+
+  $output = elem_render($element);
+
+  if(is_array($output)){
+    //Render children output inside
+    if(count($children)){
+      $output += array(
+        '#markup' => drupal_render($children),
+      );
+    }
+
+    $output = drupal_render($output);
+  }
+
+  return $output;
+}
+
+function elem_render($element){
+  $output = '';
+
+  $function = 'render_' . $element['type'];
+  if(function_exists($function)){
+    $output = call_user_func_array($function, array($element));
+  }
+
+  return $output;
+}
+
+function render_block($block){
+  $output = array(
+    '#prefix' => '<div class="span' . $block['width'] . '">',
+    '#markup' => 'x',
+    '#suffix' => '</div>',
+  );
+
+  return $output;
+}
+
+function render_row($row){
+  $output = array(
+    '#prefix' => '<div class="row">',
+    '#suffix' => '</div>',
+  );
+
+  return $output;
+}
+
+function render_html($html){
+  $output = array(
+    '#prefix' => '<div class="span' . $html['width'] . '">',
+    '#markup' => $html['content'],
+    '#suffix' => '</div>',
+  );
+
+  return $output;
+}
+
+function render_active_content($content){
+  $active_content = &drupal_static('active_content');
+  $output = array(
+    '#prefix' => '<div class="span' . $content['width'] . '">',
+    '#markup' => drupal_render($active_content),
+    '#suffix' => '</div>',
+  );
+
+  return $output;
+}
+
+function dpages_page_alter(&$page){
+  $active_content = &drupal_static('active_content');
+  $active_content = $page['content']['system_main'];
+
+  $regions = dregions();
+  $page['content']['system_main'] = $regions;
+}
