@@ -7,6 +7,14 @@ function dpages_menu(){
     'access callback' => TRUE,
   );
 
+  $items['dpages_box/%'] = array(
+    'title' => 'Block',
+    'page callback' => 'dpages_block',
+    'page arguments' => array(1),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+
   return $items;
 }
 
@@ -39,7 +47,8 @@ function dpages_blocks(){
             'content' => '<p>test</p>',
             'width' => 4,
           ),
-/*          array(
+        /*
+         array(
             'type' => 'row',
             'content' => array(
               array(
@@ -121,6 +130,27 @@ function regions_default(){
   return $page;
 }
 
+function dpages_block($id){
+  $block = db_select('block', 'b')
+    ->fields('b')
+    ->condition('bid', $id)
+    ->execute()
+    ->fetchAllAssoc('bid');
+  $block = reset($block);
+
+  $element = elem_render(array(
+    'type' => 'block',
+    'module' => $block->module,
+    'delta' => $block->delta,
+  ));
+
+  $output = array(
+    'html' => drupal_render($element),
+  );
+
+  return drupal_json_output($output);
+}
+
 function dregions2(){
   $page = dpages_blocks();
   $page = array(
@@ -128,6 +158,7 @@ function dregions2(){
   );
   return $page;
 }
+
 function dpages_page_render2($page){
   $render_array = array();
   $pos = array();
@@ -292,10 +323,7 @@ function _dpages_available_blocks(){
 
   $available_blocks = array();
   foreach ($block_info as $block) {
-    $available_blocks[] = array(
-      'module' => $block->module,
-      'delta' => $block->delta,
-    );
+    $available_blocks[] = (array) $block;
   }
 
   return $available_blocks;
@@ -316,6 +344,7 @@ function dpages_page_alter(&$page){
 
 function dpages_view(){
   drupal_add_js(drupal_get_path('module', 'dpages') . '/dpages.js');
+  drupal_add_css(drupal_get_path('module', 'dpages') . '/dpages.css');
   drupal_add_library('system', 'ui.draggable');
   drupal_add_library('system', 'ui.sortable');
 
@@ -323,7 +352,7 @@ function dpages_view(){
 
   $items = array();
   foreach ($blocks as $block) {
-    $items[] = '<div data-module="' . $block['module'] . '" data-delta="' . $block['delta'] . '">' . $block['delta'] . '</div>';
+    $items[] = '<div data-id="' . $block['bid'] . '">' . $block['delta'] . '</div>';
   }
 
   $output['blocks'] = array(

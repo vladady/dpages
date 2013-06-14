@@ -1,0 +1,3 @@
+.ui-sortable-placeholder{
+  border: 1px dotted black; visibility: visible !important; height: 50px !important;
+}
