@@ -53,7 +53,97 @@ function dpages_blocks(){
       ),
     ),
   );
+  $page = array(
+    1 => array(
+      'id' => 1,
+      'type' => 'row',
+      'parent' => 0,
+    ),
+    2 => array(
+      'id' => 2,
+      'type' => 'span',
+      'parent' => 1,
+      'weight' => 1,
+      'width' => 8,
+    ),
+    3 => array(
+      'id' => 3,
+      'type' => 'span',
+      'parent' => 1,
+      'weight' => 2,
+      'width' => 4,
+    ),
+    4 => array(
+      'id' => 4,
+      'type' => 'block',
+      'module' => 'system',
+      'delta' => 'main-menu',
+      'parent' => 2,
+      'weight' => 1,
+      'width' => 12,
+    ),
+    5 => array(
+      'id' => 5,
+      'type' => 'block',
+      'module' => 'system',
+      'delta' => 'main-menu',
+      'parent' => 2,
+      'weight' => 2,
+      'width' => 12,
+    ),
+    6 => array(
+      'id' => 6,
+      'type' => 'block',
+      'module' => 'node',
+      'delta' => 'recent',
+      'parent' => 3,
+      'weight' => 1,
+      'width' => 12,
+    ),
+  );
   return $page;
+}
+
+function regions_default(){
+  $page = array(
+    1 => array(
+      'type' => 'row',
+      'parent' => 0,
+    ),
+    2 => array(
+      'type' => 'span',
+      'parent' => 1,
+      'weight' => 1,
+      'width' => 12,
+    ),
+  );
+
+  return $page;
+}
+
+function dregions2(){
+  $page = dpages_blocks();
+  $page = array(
+    '#markup' => dpages_page_render2($page),
+  );
+  return $page;
+}
+function dpages_page_render2($page){
+  $render_array = array();
+  $pos = array();
+
+  foreach($page as $id => $element){
+    if(!$element['parent']){
+      $render_array = $element;
+      $pos[$id] = &$render_array;
+    }
+    else{
+      $pos[$element['parent']]['content'][$element['weight']] = $element;
+      $pos[$id] = &$pos[$element['parent']]['content'][$element['weight']];
+    }
+  }
+
+  return dpages_page_render($render_array);
 }
 
 function dregions(){
@@ -111,7 +201,8 @@ function render_block($block){
   $render_array = _block_get_renderable_array(_block_render_blocks(array($render_block)));
 
   $output = array(
-    '#prefix' => '<div class="span' . $block['width'] . ' column">',
+    //'#prefix' => '<div class="span' . $block['width'] . ' column">',
+    '#prefix' => '<div class="box">',
     '#markup' => drupal_render($render_array),
     '#suffix' => '</div>',
   );
@@ -131,6 +222,18 @@ function render_row($row){
   //A row is a row
   $prefix .=  '<div class="row">';
   $suffix .= '</div>';
+
+  $output = array(
+    '#prefix' => $prefix,
+    '#suffix' => $suffix,
+  );
+
+  return $output;
+}
+
+function render_span($span){
+  $prefix =  '<div data-id="' . $span['id'] . '"class="span' . $span['width'] . ' column">';
+  $suffix = '</div>';
 
   $output = array(
     '#prefix' => $prefix,
@@ -211,7 +314,6 @@ function dpages_page_alter(&$page){
   $page['content']['system_main'] = $regions;
 }
 
-
 function dpages_view(){
   drupal_add_js(drupal_get_path('module', 'dpages') . '/dpages.js');
   drupal_add_library('system', 'ui.draggable');
@@ -235,7 +337,8 @@ function dpages_view(){
   //$regions = dregions();
 
   $output['regions'] = array(
-    '#markup' => '<div class="row"><div class="span column">x</div></div>',
+    //'#markup' => '<div class="row"><div class="span column">x</div></div>',
+    dregions2(),
     //dregions(),
   );
 
