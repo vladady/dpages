@@ -13,9 +13,8 @@
     });
 
     $('.column').sortable({
-
+      connectWith: ".column"
     });
-
     $('ul, li').disableSelection();
 
     function handleDragEvent(event, ui) {
@@ -27,14 +26,14 @@
           $(ui.helper).html(msg.html);
         }
       });
+    }
 
-/*      console.log($(this).find('.box'));
-      ui.helper.html('x');
-*/    }
     function handleDropEvent(event, ui) {
-      //console.log(ui);
       id = $(this).attr('data-id');
-      //dragged = ($(ui.draggable));
+
+      helper = $(ui.helper).html()
+      $(ui.draggable).html(helper);
+      console.log($(this).find('li').index($(ui.draggable)));
     }
   });
 })(jQuery);

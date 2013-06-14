@@ -233,7 +233,7 @@ function render_block($block){
 
   $output = array(
     //'#prefix' => '<div class="span' . $block['width'] . ' column">',
-    '#prefix' => '<div class="box">',
+    '#prefix' => '<div data-id="' . $block['id'] . '" class="box">',
     '#markup' => drupal_render($render_array),
     '#suffix' => '</div>',
   );

@@ -1,3 +1,13 @@
 .ui-sortable-placeholder{
   border: 1px dotted black; visibility: visible !important; height: 50px !important;
 }
+
+ul.blocks>li{
+  float:left;
+  margin: 20px;
+}
+
+ul.blocks{
+  height: 80px;
+  overflow-y: scroll;
+}
