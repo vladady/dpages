@@ -11,3 +11,7 @@ ul.blocks{
   height: 80px;
   overflow-y: scroll;
 }
+
+.row-fluid{
+  border: 1px dotted red;
+}

@@ -7,9 +7,9 @@ function dpages_menu(){
     'access callback' => TRUE,
   );
 
-  $items['dpages_box/%'] = array(
+  $items['dpages_box'] = array(
     'title' => 'Block',
-    'page callback' => 'dpages_block',
+    'page callback' => 'dpages_box',
     'page arguments' => array(1),
     'access callback' => TRUE,
     'type' => MENU_CALLBACK,
@@ -19,98 +19,26 @@ function dpages_menu(){
 }
 
 function dpages_blocks(){
-  $page = array(
-    'type' => 'row',
-    'content' => array(
-      array(
-        'type' => 'active_content',
-        'width' => 6,
-      ),
-      array(
-        'type' => 'row',
-        'width' => 6,
-        'content' => array(
-          array(
-            'type' => 'block',
-            'module' => 'system',
-            'delta' => 'main-menu',
-            'width' => 4,
-          ),
-          array(
-            'type' => 'block',
-            'module' => 'node',
-            'delta' => 'recent',
-            'width' => 4,
-          ),
-          array(
-            'type' => 'html',
-            'content' => '<p>test</p>',
-            'width' => 4,
-          ),
-        /*
-         array(
-            'type' => 'row',
-            'content' => array(
-              array(
-                'type' => 'active_content',
-                'width' => 12,
-              ),
-            ),
-          ),
-          */
-        ),
-      ),
-    ),
-  );
-  $page = array(
-    1 => array(
-      'id' => 1,
-      'type' => 'row',
-      'parent' => 0,
-    ),
-    2 => array(
-      'id' => 2,
-      'type' => 'span',
-      'parent' => 1,
-      'weight' => 1,
-      'width' => 8,
-    ),
-    3 => array(
-      'id' => 3,
-      'type' => 'span',
-      'parent' => 1,
-      'weight' => 2,
-      'width' => 4,
-    ),
-    4 => array(
-      'id' => 4,
-      'type' => 'block',
-      'module' => 'system',
-      'delta' => 'main-menu',
-      'parent' => 2,
-      'weight' => 1,
-      'width' => 12,
-    ),
-    5 => array(
-      'id' => 5,
-      'type' => 'block',
-      'module' => 'system',
-      'delta' => 'main-menu',
-      'parent' => 2,
-      'weight' => 2,
-      'width' => 12,
-    ),
-    6 => array(
-      'id' => 6,
-      'type' => 'block',
-      'module' => 'node',
-      'delta' => 'recent',
-      'parent' => 3,
-      'weight' => 1,
-      'width' => 12,
-    ),
-  );
-  return $page;
+  $settings = array();
+
+  $module_name = 'dpages';
+  $path = drupal_get_path('module', $module_name);
+  $setttings_file = $module_name . '.conf.php';
+
+  if(file_exists($path . '/' . $setttings_file)){
+    include $path . '/' . $setttings_file;
+  }
+
+  return $settings;
+}
+
+function dpages_block_save($settings){
+  $module_name = 'dpages';
+  $path = drupal_get_path('module', 'dpages');
+  $setttings_file = $module_name . '.conf.php';
+
+  $export = '<?php $settings = ' . var_export($settings, TRUE) .';';
+  //file_put_contents($path . '/' . $setttings_file , $export);
 }
 
 function regions_default(){
@@ -130,22 +58,35 @@ function regions_default(){
   return $page;
 }
 
-function dpages_block($id){
-  $block = db_select('block', 'b')
-    ->fields('b')
-    ->condition('bid', $id)
-    ->execute()
-    ->fetchAllAssoc('bid');
+function dpages_box(){
+  $output = array();
+  $id = isset($_POST['id']) ? $id : uniqid();
+
+  $element = array(
+    'id' => $id,
+    'type' => $_POST['type'],
+    'cid' => $_POST['cid'],
+    'parent' => $_POST['parent'],
+    'weight' => $_POST['weight'],
+    'width' => $_POST['width'],
+  );
+
+  $boxes = dpages_blocks();
+  $boxes += array($id => $element);
+  dpages_block_save($boxes);
+  /*$
   $block = reset($block);
 
   $element = elem_render(array(
     'type' => 'block',
+    'id' => uniqid(),
     'module' => $block->module,
     'delta' => $block->delta,
   ));
-
+  */
+  $rendered_element = elem_render($element);
   $output = array(
-    'html' => drupal_render($element),
+    'html' => drupal_render($rendered_element),
   );
 
   return drupal_json_output($output);
@@ -173,7 +114,6 @@ function dpages_page_render2($page){
       $pos[$id] = &$pos[$element['parent']]['content'][$element['weight']];
     }
   }
-
   return dpages_page_render($render_array);
 }
 
@@ -192,6 +132,7 @@ function dpages_page_render($element){
 
   if(isset($element['content']) && is_array($element['content'])){
     $content = $element['content'];
+    ksort($content);
   }
 
   foreach($content as $child){
@@ -228,12 +169,26 @@ function elem_render($element){
 }
 
 function render_block($block){
+  if(isset($block['cid'])){
+    $b = db_select('block', 'b')
+    ->fields('b')
+    ->condition('bid', $block['cid'])
+    ->execute()
+    ->fetchAllAssoc('bid');
+    $b = reset($b);
+
+    $block += array(
+      'module' => $b->module,
+      'delta' => $b->delta,
+    );
+  }
+
   $render_block = block_load($block['module'], $block['delta']);
   $render_array = _block_get_renderable_array(_block_render_blocks(array($render_block)));
 
   $output = array(
     //'#prefix' => '<div class="span' . $block['width'] . ' column">',
-    '#prefix' => '<div data-id="' . $block['id'] . '" class="box">',
+    '#prefix' => '<div data-id="' . $block['id'] . '" data-type="block" class="box">',
     '#markup' => drupal_render($render_array),
     '#suffix' => '</div>',
   );
@@ -251,7 +206,7 @@ function render_row($row){
   }
 
   //A row is a row
-  $prefix .=  '<div class="row">';
+  $prefix .=  '<div class="row-fluid">';
   $suffix .= '</div>';
 
   $output = array(
@@ -342,17 +297,16 @@ function dpages_page_alter(&$page){
   $page['content']['system_main'] = $regions;
 }
 
-function dpages_view(){
-  drupal_add_js(drupal_get_path('module', 'dpages') . '/dpages.js');
-  drupal_add_css(drupal_get_path('module', 'dpages') . '/dpages.css');
-  drupal_add_library('system', 'ui.draggable');
-  drupal_add_library('system', 'ui.sortable');
-
+function dpages_boxes(){
   $blocks = _dpages_available_blocks();
 
   $items = array();
   foreach ($blocks as $block) {
-    $items[] = '<div data-id="' . $block['bid'] . '">' . $block['delta'] . '</div>';
+    $box = array(
+      '#prefix' => '<div data-cid="' . uniqid() . '" data-type="block">',
+      //'#suffix' => ,
+    );
+    $items[] = '<div data-cid="' . $block['bid'] . '" data-type="block">' . $block['delta'] . '</div>';
   }
 
   $output['blocks'] = array(
@@ -363,7 +317,20 @@ function dpages_view(){
     ),
   );
 
-  //$regions = dregions();
+  return drupal_render($output);
+}
+
+function dpages_view(){
+  drupal_add_js(drupal_get_path('module', 'dpages') . '/dpages.js');
+  drupal_add_css(drupal_get_path('module', 'dpages') . '/dpages.css');
+  drupal_add_library('system', 'ui.draggable');
+  drupal_add_library('system', 'ui.sortable');
+
+
+  $boxes = dpages_boxes();
+  $output['boxes'] = array(
+    '#markup' => $boxes
+  );
 
   $output['regions'] = array(
     //'#markup' => '<div class="row"><div class="span column">x</div></div>',
