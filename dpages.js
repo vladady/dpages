@@ -3,7 +3,7 @@
     $('ul.blocks').find('div').draggable({
       //connectWith: ".column",
       start: handleDragEvent,
-      //connectToSortable: ".column",
+      connectToSortable: ".column",
       revert: 'invalid',
       helper: 'clone'
     });
@@ -12,15 +12,15 @@
       drop: handleDropEvent,
     });
 
-    /*$('.column').sortable({
+    $('.column').sortable({
       connectWith: ".column",
       stop: function (event, ui){
-        console.log($(ui.item));
-        parent = $(this).attr('data-id');
+        //return;
+        parent = $(ui.item).parent().attr('data-id');
         id = $(ui.item).attr('data-id');
         cid = $(ui.item).attr('data-cid');
         type = $(ui.item).attr('data-type');
-        weight = $(this).children().index($(ui.item));
+        weight = $(ui.item).parent().children().index($(ui.item));
         width = 12;
 
         $.ajax({
@@ -40,7 +40,7 @@
           }
         });
       }
-    });*/
+    });
     $('ul, li').disableSelection();
 
     function handleDragEvent(event, ui) {

@@ -12,6 +12,12 @@ ul.blocks{
   overflow-y: scroll;
 }
 
-.row-fluid{
+.column{
   border: 1px dotted red;
+}
+
+.column {
+  border: 1px solid #DDDDDD;
+  margin: 15px 0;
+  padding: 39px 19px 24px;
 }

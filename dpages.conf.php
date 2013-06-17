@@ -48,7 +48,7 @@
     'module' => 'node',
     'delta' => 'recent',
     'parent' => 3,
-    'weight' => 0,
+    'weight' => 1,
     'width' => 12,
   ),
   '51bdfba4774f9' =>
@@ -56,8 +56,8 @@
     'id' => '51bdfba4774f9',
     'type' => 'block',
     'cid' => '47',
-    'parent' => 2,
-    'weight' => '2',
+    'parent' => 3,
+    'weight' => '0',
     'width' => '12',
   ),
   8 =>
@@ -73,6 +73,14 @@
     'type' => 'span',
     'parent' => 8,
     'weight' => 0,
-    'width' => 12,
+    'width' => 6,
+  ),
+  10 =>
+  array (
+    'id' => 10,
+    'type' => 'span',
+    'parent' => 8,
+    'weight' => 1,
+    'width' => 6,
   ),
 );

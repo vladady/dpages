@@ -38,7 +38,7 @@ function dpages_block_save($settings){
   $setttings_file = $module_name . '.conf.php';
 
   $export = '<?php $settings = ' . var_export($settings, TRUE) .';';
-  //file_put_contents($path . '/' . $setttings_file , $export);
+  file_put_contents($path . '/' . $setttings_file , $export);
 }
 
 function regions_default(){
@@ -60,30 +60,27 @@ function regions_default(){
 
 function dpages_box(){
   $output = array();
-  $id = isset($_POST['id']) ? $id : uniqid();
 
-  $element = array(
-    'id' => $id,
-    'type' => $_POST['type'],
-    'cid' => $_POST['cid'],
-    'parent' => $_POST['parent'],
-    'weight' => $_POST['weight'],
-    'width' => $_POST['width'],
-  );
+  $params = array('type' , 'cid' , 'parent' , 'weight' , 'width');
+  $id = !empty($_POST['id']) ? $_POST['id'] : uniqid();
 
   $boxes = dpages_blocks();
-  $boxes += array($id => $element);
-  dpages_block_save($boxes);
-  /*$
-  $block = reset($block);
 
-  $element = elem_render(array(
-    'type' => 'block',
-    'id' => uniqid(),
-    'module' => $block->module,
-    'delta' => $block->delta,
-  ));
-  */
+  if(isset($boxes[$id])){
+    $element = &$boxes[$id];
+  }
+  else{
+    $element = array('id' => $id);
+  }
+
+  foreach($params as $param){
+    if(isset($_POST[$param]) && !is_null($_POST[$param])){
+      $element[$param] = $_POST[$param];
+    }
+  }
+
+  dpages_block_save($boxes);
+
   $rendered_element = elem_render($element);
   $output = array(
     'html' => drupal_render($rendered_element),
