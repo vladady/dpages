@@ -61,12 +61,13 @@ function regions_default(){
 function dpages_box(){
   $output = array();
 
-  $params = array('type' , 'cid' , 'parent' , 'weight' , 'width');
+  $params = array('id', 'type' , 'cid' , 'parent' , 'weight' , 'width');
   $id = !empty($_POST['id']) ? $_POST['id'] : uniqid();
 
   $boxes = dpages_blocks();
+  $new = !isset($boxes[$id]) ? TRUE : FALSE;
 
-  if(isset($boxes[$id])){
+  if(!$new){
     $element = &$boxes[$id];
   }
   else{
@@ -78,15 +79,17 @@ function dpages_box(){
       $element[$param] = $_POST[$param];
     }
   }
+  if($new) {
+    $boxes[$id] = $element;
+  }
 
-  dpages_block_save($boxes);
+  //dpages_block_save($boxes);
 
   $rendered_element = elem_render($element);
-  $output = array(
-    'html' => drupal_render($rendered_element),
-  );
 
-  return drupal_json_output($output);
+  return drupal_json_output(array(
+    'html' => drupal_render($rendered_element),
+  ));
 }
 
 function dregions2(){
@@ -203,7 +206,7 @@ function render_row($row){
   }
 
   //A row is a row
-  $prefix .=  '<div class="row-fluid">';
+  $prefix .=  '<div class="row-fluid box">';
   $suffix .= '</div>';
 
   $output = array(
@@ -303,7 +306,7 @@ function dpages_boxes(){
       '#prefix' => '<div data-cid="' . uniqid() . '" data-type="block">',
       //'#suffix' => ,
     );
-    $items[] = '<div data-cid="' . $block['bid'] . '" data-type="block">' . $block['delta'] . '</div>';
+    $items[] = '<div class="block-element" data-cid="' . $block['bid'] . '" data-type="block">' . $block['delta'] . '</div>';
   }
 
   $output['blocks'] = array(

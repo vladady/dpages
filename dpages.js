@@ -2,20 +2,27 @@
   $(document).ready(function(){
     $('ul.blocks').find('div').draggable({
       //connectWith: ".column",
-      start: handleDragEvent,
+      //start: handleDragEvent,
       connectToSortable: ".column",
       revert: 'invalid',
       helper: 'clone'
     });
 
-    $('.column').droppable({
+    /*$('.column').droppable({
       drop: handleDropEvent,
-    });
+    });*/
 
     $('.column').sortable({
+      items: '.box',
       connectWith: ".column",
+      helper: function(){
+        return $('<div>mini helper</div>');
+      },
+      sort: function(event, ui){
+        event.stopPropagation();
+      },
       stop: function (event, ui){
-        //return;
+        return;
         parent = $(ui.item).parent().attr('data-id');
         id = $(ui.item).attr('data-id');
         cid = $(ui.item).attr('data-cid');
@@ -43,9 +50,9 @@
     });
     $('ul, li').disableSelection();
 
-    function handleDragEvent(event, ui) {
+/*    function handleDragEvent(event, ui) {
       return;
-    }
+    }*/
 
     function handleDropEvent(event, ui) {
       return;

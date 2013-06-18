@@ -1,5 +1,7 @@
 .ui-sortable-placeholder{
-  border: 1px dotted black; visibility: visible !important; height: 50px !important;
+  border: 1px dotted black;
+  visibility: visible !important;
+  height: 30px !important;
 }
 
 ul.blocks>li{
@@ -19,5 +21,7 @@ ul.blocks{
 .column {
   border: 1px solid #DDDDDD;
   margin: 15px 0;
-  padding: 39px 19px 24px;
+  /* padding: 39px 19px 24px; */
+  padding: 5px;
+  min-height: 100px !important;
 }

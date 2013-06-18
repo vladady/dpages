@@ -55,9 +55,9 @@
   array (
     'id' => '51bdfba4774f9',
     'type' => 'block',
-    'cid' => '47',
+    'cid' => 47,
     'parent' => 3,
-    'weight' => '0',
+    'weight' => 1,
     'width' => '12',
   ),
   8 =>
@@ -82,5 +82,14 @@
     'parent' => 8,
     'weight' => 1,
     'width' => 6,
+  ),
+  '51bf25022e439' =>
+  array (
+    'id' => '51bf25022e439',
+    'type' => 'block',
+    'cid' => '46',
+    'parent' => '2',
+    'weight' => 2,
+    'width' => '12',
   ),
 );
