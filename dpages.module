@@ -61,8 +61,9 @@ function regions_default(){
 function dpages_box(){
   $output = array();
 
-  $params = array('id', 'type' , 'cid' , 'parent' , 'weight' , 'width');
-  $id = !empty($_POST['id']) ? $_POST['id'] : uniqid();
+  //One item is added/changed and requested for display
+  $item = isset($_POST['item']) ? $_POST['item'] : array();
+  $id = !empty($item['id']) ? $item['id'] : uniqid();
 
   $boxes = dpages_blocks();
   $new = !isset($boxes[$id]) ? TRUE : FALSE;
@@ -74,17 +75,26 @@ function dpages_box(){
     $element = array('id' => $id);
   }
 
+  //Check item params
+  $params = array('id', 'type' , 'cid' , 'parent' , 'weight' , 'width');
   foreach($params as $param){
-    if(isset($_POST[$param]) && !is_null($_POST[$param])){
-      $element[$param] = $_POST[$param];
+    if(isset($item[$param]) && !is_null($item[$param])){
+      $element[$param] = $item[$param];
     }
   }
   if($new) {
     $boxes[$id] = $element;
   }
 
-  //dpages_block_save($boxes);
+  if(isset($_POST['weights']) && !empty($_POST['weights'])){
+    foreach($_POST['weights'] as $pos => $id){
+      $boxes[$id]['weight'] = $pos;
+    }
+  }
 
+  dpages_block_save($boxes);
+
+  //Return render element requested
   $rendered_element = elem_render($element);
 
   return drupal_json_output(array(
@@ -104,16 +114,34 @@ function dpages_page_render2($page){
   $render_array = array();
   $pos = array();
 
+  //Check dependances
+  $ids = array(0);
+  while(count($ids)){
+    $new_ids = array();
+    foreach($ids as $id){
+      foreach($page as $el_id => $element){
+        if($element['parent'] == $id){
+          $new_ids[] = $el_id;
+          $elements[$el_id] = $element;
+        }
+      }
+    }
+    $ids = $new_ids;
+  }
+  $page = $elements;
+
   foreach($page as $id => $element){
     if(!$element['parent']){
       $render_array = $element;
       $pos[$id] = &$render_array;
     }
     else{
-      $pos[$element['parent']]['content'][$element['weight']] = $element;
+      dpm($element['parent']);
+      $pos[$element['parent']]['content'][$element['weight']] = $element;dpm($pos);
       $pos[$id] = &$pos[$element['parent']]['content'][$element['weight']];
     }
   }
+
   return dpages_page_render($render_array);
 }
 
@@ -188,7 +216,7 @@ function render_block($block){
 
   $output = array(
     //'#prefix' => '<div class="span' . $block['width'] . ' column">',
-    '#prefix' => '<div data-id="' . $block['id'] . '" data-type="block" class="box">',
+    '#prefix' => '<div id="' . $block['id'] . '" data-type="block" class="box">',
     '#markup' => drupal_render($render_array),
     '#suffix' => '</div>',
   );
@@ -206,7 +234,7 @@ function render_row($row){
   }
 
   //A row is a row
-  $prefix .=  '<div class="row-fluid box">';
+  $prefix .=  '<div id="' . $row['id'] .  '" class="row-fluid box">';
   $suffix .= '</div>';
 
   $output = array(
@@ -218,7 +246,7 @@ function render_row($row){
 }
 
 function render_span($span){
-  $prefix =  '<div data-id="' . $span['id'] . '"class="span' . $span['width'] . ' column">';
+  $prefix =  '<div id="' . $span['id'] . '"class="span' . $span['width'] . ' column">';
   $suffix = '</div>';
 
   $output = array(

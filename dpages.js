@@ -23,29 +23,32 @@
         event.stopPropagation();
       },
       update: function(event, ui){
-
       },
       stop: function (event, ui){
-        console.log(ui.item.hasClass('box-new'));
-        return;
-        id = $(ui.item).attr('data-id');
+        parent = $(ui.item).parent().attr('id');
+        id = $(ui.item).attr('id');
         cid = $(ui.item).attr('data-cid');
         type = $(ui.item).attr('data-type');
         weight = $(ui.item).parent().children().index($(ui.item));
+        weights = $(this).sortable('toArray');
         width = 12;
 
         $.ajax({
           type: 'POST',
           url: Drupal.settings.basePath + 'dpages_box',
           data: {
-            'id': id,
-            'parent': parent,
-            'type': type,
-            'cid': cid,
-            'weight': weight,
-            'width': width,
+            'item': {
+              'id': id,
+              'parent': parent,
+              'type': type,
+              'cid': cid,
+              'weight': weight,
+              'width': width
+            },
+            'weights': weights
           },
           success: function (msg) {
+            console.log(msg.html)
             $(ui.item).replaceWith(msg.html);
           }
         });
