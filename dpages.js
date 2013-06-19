@@ -5,12 +5,13 @@
       //start: handleDragEvent,
       connectToSortable: ".column",
       revert: 'invalid',
-      helper: 'clone'
+      helper: 'clone',
     });
 
     /*$('.column').droppable({
       drop: handleDropEvent,
     });*/
+
 
     $('.column').sortable({
       items: '.box',
@@ -21,9 +22,12 @@
       sort: function(event, ui){
         event.stopPropagation();
       },
+      update: function(event, ui){
+
+      },
       stop: function (event, ui){
+        console.log(ui.item.hasClass('box-new'));
         return;
-        parent = $(ui.item).parent().attr('data-id');
         id = $(ui.item).attr('data-id');
         cid = $(ui.item).attr('data-cid');
         type = $(ui.item).attr('data-type');
@@ -42,7 +46,6 @@
             'width': width,
           },
           success: function (msg) {
-            //console.log(msg.html);
             $(ui.item).replaceWith(msg.html);
           }
         });
@@ -50,7 +53,8 @@
     });
     $('ul, li').disableSelection();
 
-/*    function handleDragEvent(event, ui) {
+    /*
+     function handleDragEvent(event, ui) {
       return;
     }*/
 

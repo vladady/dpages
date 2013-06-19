@@ -321,9 +321,10 @@ function dpages_boxes(){
 }
 
 function dpages_view(){
+  //drupal_add_js(drupal_get_path('module', 'dpages') . '/jquery-sortable-min.js');
   drupal_add_js(drupal_get_path('module', 'dpages') . '/dpages.js');
   drupal_add_css(drupal_get_path('module', 'dpages') . '/dpages.css');
-  drupal_add_library('system', 'ui.draggable');
+  //drupal_add_library('system', 'ui.draggable');
   drupal_add_library('system', 'ui.sortable');
 
 
