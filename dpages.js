@@ -30,8 +30,13 @@
         cid = $(ui.item).attr('data-cid');
         type = $(ui.item).attr('data-type');
         weight = $(ui.item).parent().children().index($(ui.item));
-        weights = $(this).sortable('toArray');
         width = 12;
+
+        weights = [];
+        $(ui.item).parent().children().each(function(){
+          weights.push($(this).attr('id'));
+        });
+
 
         $.ajax({
           type: 'POST',
@@ -48,7 +53,7 @@
             'weights': weights
           },
           success: function (msg) {
-            console.log(msg.html)
+            //console.log(msg.html)
             $(ui.item).replaceWith(msg.html);
           }
         });

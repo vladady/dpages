@@ -10,8 +10,14 @@ ul.blocks>li{
 }
 
 ul.blocks{
-  height: 80px;
-  overflow-y: scroll;
+  width: 5000px;
+}
+
+.boxes-outer{
+  overflow-x: scroll;
+  overflow-y: hidden;
+  /*height: 100px;*/
+  border-size: 1px dotted blue;
 }
 
 .column{

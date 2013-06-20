@@ -1,4 +1,4 @@
-<?php
+7<?php
 
 function dpages_menu(){
   $items['dpages'] = array(
@@ -58,12 +58,33 @@ function regions_default(){
   return $page;
 }
 
+//Connected elements needed
+function row_spans($row, $widths){
+  $elements = array();
+
+  foreach($widths as $width){
+    $elements[uniqid()] = array(
+      'type' => 'span',
+      'width' => $width,
+      'weight' => 0,
+    );
+  }
+
+  return $elements;
+}
+
+function connected_row($row){
+  dpm($row);
+}
+
 function dpages_box(){
   $output = array();
 
   //One item is added/changed and requested for display
   $item = isset($_POST['item']) ? $_POST['item'] : array();
+
   $id = !empty($item['id']) ? $item['id'] : uniqid();
+  $type = !empty($item['type']) ? $item['type'] : '';
 
   $boxes = dpages_blocks();
   $new = !isset($boxes[$id]) ? TRUE : FALSE;
@@ -73,6 +94,9 @@ function dpages_box(){
   }
   else{
     $element = array('id' => $id);
+    if(function_exists('connected_' . $type)){
+      $boxes += call_user_func_array('connected_' . $type, array($element));
+    }
   }
 
   //Check item params
@@ -82,13 +106,16 @@ function dpages_box(){
       $element[$param] = $item[$param];
     }
   }
+
   if($new) {
     $boxes[$id] = $element;
   }
 
   if(isset($_POST['weights']) && !empty($_POST['weights'])){
     foreach($_POST['weights'] as $pos => $id){
-      $boxes[$id]['weight'] = $pos;
+      if($id != 'undefined'){
+        $boxes[$id]['weight'] = $pos;
+      }
     }
   }
 
@@ -128,6 +155,7 @@ function dpages_page_render2($page){
     }
     $ids = $new_ids;
   }
+
   $page = $elements;
 
   foreach($page as $id => $element){
@@ -136,8 +164,7 @@ function dpages_page_render2($page){
       $pos[$id] = &$render_array;
     }
     else{
-      dpm($element['parent']);
-      $pos[$element['parent']]['content'][$element['weight']] = $element;dpm($pos);
+      $pos[$element['parent']]['content'][$element['weight']] = $element;
       $pos[$id] = &$pos[$element['parent']]['content'][$element['weight']];
     }
   }
@@ -343,6 +370,8 @@ function dpages_boxes(){
     '#attributes' => array(
       'class' => array('blocks')
     ),
+    '#prefix' => '<div class="boxes-outer">',
+    '#suffix' => '</div>',
   );
 
   return drupal_render($output);
