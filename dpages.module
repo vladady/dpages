@@ -74,7 +74,7 @@ function row_spans($row, $widths){
 }
 
 function connected_row($row){
-  dpm($row);
+  return row_spans($row, array(6,6));
 }
 
 function dpages_box(){
@@ -95,7 +95,8 @@ function dpages_box(){
   else{
     $element = array('id' => $id);
     if(function_exists('connected_' . $type)){
-      $boxes += call_user_func_array('connected_' . $type, array($element));
+      dpm(call_user_func_array('connected_' . $type, array($element)));
+      //$boxes +=
     }
   }
 
@@ -119,7 +120,7 @@ function dpages_box(){
     }
   }
 
-  dpages_block_save($boxes);
+  //dpages_block_save($boxes);
 
   //Return render element requested
   $rendered_element = elem_render($element);
@@ -356,13 +357,13 @@ function dpages_boxes(){
   $blocks = _dpages_available_blocks();
 
   $items = array();
+
+  $items[] = '<div class="block-element" data-type="row">Row</div>';
   foreach ($blocks as $block) {
-    $box = array(
-      '#prefix' => '<div data-cid="' . uniqid() . '" data-type="block">',
-      //'#suffix' => ,
-    );
     $items[] = '<div class="block-element" data-cid="' . $block['bid'] . '" data-type="block">' . $block['delta'] . '</div>';
   }
+
+
 
   $output['blocks'] = array(
     '#theme' => 'item_list',
