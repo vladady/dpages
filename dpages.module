@@ -1,4 +1,4 @@
-7<?php
+<?php
 
 function dpages_menu(){
   $items['dpages'] = array(
@@ -18,6 +18,7 @@ function dpages_menu(){
   return $items;
 }
 
+// Retrieve existing blocks and save them
 function dpages_blocks(){
   $settings = array();
 
@@ -41,6 +42,7 @@ function dpages_block_save($settings){
   file_put_contents($path . '/' . $setttings_file , $export);
 }
 
+// Default boxes in a region
 function regions_default(){
   $page = array(
     1 => array(
@@ -62,11 +64,15 @@ function regions_default(){
 function row_spans($row, $widths){
   $elements = array();
 
+  $i = 0;
   foreach($widths as $width){
-    $elements[uniqid()] = array(
+    $id = uniqid();
+    $elements[$id] = array(
+      'id' => $id,
       'type' => 'span',
+      'parent' => $row['id'],
       'width' => $width,
-      'weight' => 0,
+      'weight' => $i++,
     );
   }
 
@@ -94,9 +100,9 @@ function dpages_box(){
   }
   else{
     $element = array('id' => $id);
+
     if(function_exists('connected_' . $type)){
-      dpm(call_user_func_array('connected_' . $type, array($element)));
-      //$boxes +=
+      $boxes += call_user_func_array('connected_' . $type, array($element));
     }
   }
 
@@ -119,14 +125,20 @@ function dpages_box(){
       }
     }
   }
+  //dpm($boxes);
+  dpages_block_save($boxes);
 
-  //dpages_block_save($boxes);
-
-  //Return render element requested
-  $rendered_element = elem_render($element);
+  if($type == 'row'){
+    $html = dpages_page_render2($boxes, $element['id']);
+  }
+  else {
+    //Return render element requested
+    $rendered_element = elem_render($element);
+    $html = drupal_render($rendered_element);
+  }
 
   return drupal_json_output(array(
-    'html' => drupal_render($rendered_element),
+    'html' => $html,
   ));
 }
 
@@ -138,12 +150,114 @@ function dregions2(){
   return $page;
 }
 
-function dpages_page_render2($page){
+function _dpages_available_blocks(){
+  global $theme_key;
+
+  $query = db_select('block', 'b');
+  $result = $query->fields('b')
+    ->condition('b.theme', $theme_key)
+    //->condition('b.status', 1)
+    ->orderBy('b.region')
+    ->orderBy('b.weight')
+    ->orderBy('b.module')
+    ->addTag('block_load')
+    ->addTag('translatable')
+    ->execute();
+
+  $block_info = $result->fetchAllAssoc('bid');
+  drupal_alter('block_list', $block_info);
+
+  $available_blocks = array();
+  foreach ($block_info as $block) {
+    $available_blocks[] = (array) $block;
+  }
+
+  return $available_blocks;
+}
+
+function dpages_page_alter(&$page){//return;
+  global $user;
+  $output = array();
+  $is_admin = in_array('administrator', $user->roles);
+
+  if($is_admin){
+    drupal_add_js(drupal_get_path('module', 'dpages') . '/dpages.js');
+    drupal_add_css(drupal_get_path('module', 'dpages') . '/dpages.css');
+    drupal_add_library('system', 'ui.draggable');
+    drupal_add_library('system', 'ui.sortable');
+    drupal_add_library('system', 'ui.resizable');
+
+    $boxes = dpages_boxes();
+    $output['boxes'] = array(
+      '#markup' => $boxes,
+    );
+  }
+
+  //Store active content
+  $active_content = &drupal_static('active_content');
+  $active_content = $page['content']['system_main'];
+
+  $output['regions'] = dregions2();
+  $page['content']['system_main'] = $output;
+}
+
+function dpages_boxes(){
+  $blocks = _dpages_available_blocks();
+
+  $items = array();
+
+  $items[] = '<div class="block-element" data-type="active_content">Active content</div>';
+  $items[] = '<div class="block-element" data-type="row">Row</div>';
+  foreach ($blocks as $block) {
+    $items[] = '<div class="block-element" data-cid="' . $block['bid'] . '" data-type="block">' . $block['delta'] . '</div>';
+  }
+
+  $output['blocks'] = array(
+    '#theme' => 'item_list',
+    '#items' => $items,
+    '#attributes' => array(
+      'class' => array('blocks')
+    ),
+    '#prefix' => '<div class="boxes-outer">',
+    '#suffix' => '</div>',
+  );
+
+  return drupal_render($output);
+}
+
+function dpages_view(){
+  return 'asdsada';
+  //drupal_add_js(drupal_get_path('module', 'dpages') . '/jquery-sortable-min.js');
+  drupal_add_js(drupal_get_path('module', 'dpages') . '/dpages.js');
+  drupal_add_css(drupal_get_path('module', 'dpages') . '/dpages.css');
+  drupal_add_library('system', 'ui.draggable');
+  drupal_add_library('system', 'ui.sortable');
+
+  $boxes = dpages_boxes();
+  $output['boxes'] = array(
+    '#markup' => $boxes
+  );
+
+  $output['regions'] = array(
+    //'#markup' => '<div class="row"><div class="span column">x</div></div>',
+    dregions2(),
+    //dregions(),
+  );
+
+  return $output;
+}
+
+
+// Render functions
+
+function dpages_page_render2($page, $root = 1){
   $render_array = array();
   $pos = array();
 
-  //Check dependances
-  $ids = array(0);
+  //Check dependencies and sort page by them
+  $ids = array($root);
+  $elements[$root] = $page[$root];
+
   while(count($ids)){
     $new_ids = array();
     foreach($ids as $id){
@@ -156,11 +270,12 @@ function dpages_page_render2($page){
     }
     $ids = $new_ids;
   }
-
   $page = $elements;
+  //dpm($page);
 
+  // Build the big array
   foreach($page as $id => $element){
-    if(!$element['parent']){
+    if(!$element['parent'] || $id == $root){
       $render_array = $element;
       $pos[$id] = &$render_array;
     }
@@ -169,6 +284,7 @@ function dpages_page_render2($page){
       $pos[$id] = &$pos[$element['parent']]['content'][$element['weight']];
     }
   }
+  //dpm($render_array);
 
   return dpages_page_render($render_array);
 }
@@ -262,7 +378,7 @@ function render_row($row){
   }
 
   //A row is a row
-  $prefix .=  '<div id="' . $row['id'] .  '" class="row-fluid box">';
+  $prefix .=  '<div id="' . $row['id'] .  '" data-type="row" class="row-fluid box">';
   $suffix .= '</div>';
 
   $output = array(
@@ -306,8 +422,9 @@ function render_html($html){
 
 function render_active_content($content){
   $active_content = &drupal_static('active_content');
+
   $output = array(
-    '#prefix' => '<div class="span' . $content['width'] . '">',
+    '#prefix' => '<div id="' . $content['id'] . '" data-type="active_content" class="box">',
     '#markup' => drupal_render($active_content),
     '#suffix' => '</div>',
   );
@@ -315,88 +432,4 @@ function render_active_content($content){
   return $output;
 }
 
-function _dpages_available_blocks(){
-  global $theme_key;
-
-  $query = db_select('block', 'b');
-  $result = $query->fields('b')
-    ->condition('b.theme', $theme_key)
-    //->condition('b.status', 1)
-    ->orderBy('b.region')
-    ->orderBy('b.weight')
-    ->orderBy('b.module')
-    ->addTag('block_load')
-    ->addTag('translatable')
-    ->execute();
-
-  $block_info = $result->fetchAllAssoc('bid');
-  drupal_alter('block_list', $block_info);
-
-  $available_blocks = array();
-  foreach ($block_info as $block) {
-    $available_blocks[] = (array) $block;
-  }
-
-  return $available_blocks;
-}
-
-function dpages_page_alter(&$page){
-  if(!drupal_is_front_page()){
-    return;
-  }
-  //$blocks = _dpages_available_blocks();
-
-  $active_content = &drupal_static('active_content');
-  $active_content = $page['content']['system_main'];
-
-  $regions = dregions();
-  $page['content']['system_main'] = $regions;
-}
-
-function dpages_boxes(){
-  $blocks = _dpages_available_blocks();
-
-  $items = array();
-
-  $items[] = '<div class="block-element" data-type="row">Row</div>';
-  foreach ($blocks as $block) {
-    $items[] = '<div class="block-element" data-cid="' . $block['bid'] . '" data-type="block">' . $block['delta'] . '</div>';
-  }
-
-
-
-  $output['blocks'] = array(
-    '#theme' => 'item_list',
-    '#items' => $items,
-    '#attributes' => array(
-      'class' => array('blocks')
-    ),
-    '#prefix' => '<div class="boxes-outer">',
-    '#suffix' => '</div>',
-  );
-
-  return drupal_render($output);
-}
-
-function dpages_view(){
-  //drupal_add_js(drupal_get_path('module', 'dpages') . '/jquery-sortable-min.js');
-  drupal_add_js(drupal_get_path('module', 'dpages') . '/dpages.js');
-  drupal_add_css(drupal_get_path('module', 'dpages') . '/dpages.css');
-  //drupal_add_library('system', 'ui.draggable');
-  drupal_add_library('system', 'ui.sortable');
-
-
-  $boxes = dpages_boxes();
-  $output['boxes'] = array(
-    '#markup' => $boxes
-  );
-
-  $output['regions'] = array(
-    //'#markup' => '<div class="row"><div class="span column">x</div></div>',
-    dregions2(),
-    //dregions(),
-  );
-
-  return $output;
-}
 

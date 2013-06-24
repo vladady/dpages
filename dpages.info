@@ -2,3 +2,6 @@ name = Dynamic Pages
 description = Dynamic pages
 
 core = 7.x
+
+files[] = dpages.module
+files[] = dpages.render.inc.php
