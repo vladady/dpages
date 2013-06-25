@@ -372,10 +372,10 @@ function render_row($row){
   $prefix = $suffix = '';
 
   //Check if row is also a span
-  if(isset($row['width'])){
+  /*
     $prefix = '<div class="span' . $row['width'] . '">';
     $suffix = '</div>';
-  }
+  }*/
 
   //A row is a row
   $prefix .=  '<div id="' . $row['id'] .  '" data-type="row" class="row-fluid box">';

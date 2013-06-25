@@ -72,9 +72,12 @@
           old_class = 'span' + cur_span;
 
           right_el = $(this).siblings('.column').first();
+
+          idx = $(this).parent().children('.column').index($(this));
+          console.log($(this).parent().children('.column').eq(idx+1));
+
           right_span = spanWidth(right_el.attr('class'));
           max_span = cur_span + right_span - 1;
-          console.log(max_span);
 
           //Count closest widths
           percent = 100 * ui.size.width / ui.originalSize.width;
